@@ -1,43 +1,45 @@
 const backoff = require('backoff');
 
-const RETRIABLE_ERRORS = [
-  'ECONNRESET',
-  'ENOTFOUND',
-  'ESOCKETTIMEDOUT',
-  'ETIMEDOUT',
-  'ECONNREFUSED',
-  'EHOSTUNREACH',
-  'EPIPE',
-  'EAI_AGAIN',
-];
+const defaultConfig = {
+  maxRetries: 20,
+  initialDelay: 100,
+  maxDelay: 10000,
+  retriableErrors: [
+    'ECONNRESET',
+    'ENOTFOUND',
+    'ESOCKETTIMEDOUT',
+    'ETIMEDOUT',
+    'ECONNREFUSED',
+    'EHOSTUNREACH',
+    'EPIPE',
+    'EAI_AGAIN',
+  ],
+};
 
 module.exports = (options = {}) => (fn, args = []) => {
   let call;
+
+  const retriableErrors = options.retriableErrors || defaultConfig.retriableErrors;
+  const retryByErrorCode = err => err && err.code && retriableErrors.includes(err.code);
+  const config = Object.assign({ retryIf: retryByErrorCode }, defaultConfig, options);
+
   const promise = new Promise((resolve, reject) => {
     call = backoff.call.apply(null, [
       fn,
       ...args,
-      (err, res) => {
-        // NOTE. Only triggered in case of server communication
-        if (err) return reject(err);
-        return resolve(res);
-      },
+      (err, res) => (err ? reject(err) : resolve(res)),
     ]);
 
-    call.retryIf(err => {
-      if (err && err.code) {
-        return RETRIABLE_ERRORS.includes(err.code);
-      }
-      return false;
-    });
-
+    call.retryIf(config.retryIf);
+    call.failAfter(config.maxRetries);
     call.setStrategy(new backoff.ExponentialStrategy({
-      initialDelay: options.initialDelay || 100,
-      maxDelay: options.maxDelay || 10000,
+      initialDelay: config.initialDelay,
+      maxDelay: config.maxDelay,
     }));
-    call.failAfter(options.maxRetries || 20);
+
     call.start();
   });
+
   promise.onRetry = cb => call.on('backoff', cb);
   return promise;
 };
