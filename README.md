@@ -1,4 +1,4 @@
-# node-rety
+# node-retry
 
 ## Install
 
