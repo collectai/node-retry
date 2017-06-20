@@ -1,5 +1,5 @@
 {
-  "name": "node-retry",
+  "name": "@collectai/node-retry",
   "version": "0.1.0",
   "description": "Retry library",
   "main": "index.js",
