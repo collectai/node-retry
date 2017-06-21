@@ -2,9 +2,9 @@
   "name": "@collectai/node-retry",
   "version": "0.1.1",
   "description": "Retry library",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --trace-warnings -r test/bootstrap.js test/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -14,5 +14,11 @@
   "license": "Apache-2.0",
   "dependencies": {
     "backoff": "^2.5.0"
+  },
+  "devDependencies": {
+    "mocha": "^3.2.0",
+    "sinon": "^2.1.0",
+    "unexpected": "^10.26.3",
+    "unexpected-sinon": "^10.7.1"
   }
 }
