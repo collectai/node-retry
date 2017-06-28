@@ -24,15 +24,6 @@ nodeRetry(function(cb) {
 });
 ```
 
-This will display:
-
-```
-myfunc called 1 times
-myfunc called 2 times
-myfunc called 3 times
-succeed the third time
-```
-
 ### Configurable retry validation
 
 ```javascript
@@ -56,7 +47,29 @@ nodeRetry(function(cb) {
 });
 ```
 
-This will display:
+### Promise retry
+
+```javascript
+var nodeRetry = require('@collectai/node-retry')();
+
+var count = 0;
+nodeRetry()(function() {
+  console.log('myfunc called ' + (++count) + ' times');
+  return new Promise(function(resolve, reject) {
+    if (count < 3) {
+      var error = new Error('Service connection error');
+      error.code = 'ETIMEDOUT';
+      reject(error);
+    } else {
+      resolve('succeed the third time');
+    }
+  });
+}).then(function(result) {
+  console.log(result);
+});
+```
+
+All these examples will display:
 
 ```
 myfunc called 1 times
@@ -64,4 +77,3 @@ myfunc called 2 times
 myfunc called 3 times
 succeed the third time
 ```
-
