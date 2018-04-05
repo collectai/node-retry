@@ -61,10 +61,4 @@ describe('Retry', () => {
     }
     expect(this.counter, 'to equal', 1);
   });
-
-  it('should support value functions without callback', async () => {
-    const retry = createRetry(defaultOptions);
-    const result = await retry(() => 'foobar');
-    expect(result, 'to equal', 'foobar');
-  })
 });
