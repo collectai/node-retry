@@ -12,6 +12,12 @@ const timeout = () => {
   return e;
 };
 
+const wrapTimeout = () => {
+  const e = new Error('Domain error');
+  e.cause = timeout();
+  return e;
+}
+
 describe('Retry', () => {
   beforeEach(function init() {
     this.counter = 0;
@@ -61,4 +67,21 @@ describe('Retry', () => {
     }
     expect(this.counter, 'to equal', 1);
   });
+
+  it('should retry when erros are wrapped', async function test() {
+    const retry = createRetry(defaultOptions);
+    const timeoutes = [wrapTimeout(), null];
+    const fakeRequest = cb => process.nextTick(() => cb(timeoutes.shift()));
+
+    try {
+      const promise = retry(fakeRequest);
+      promise.onRetry(() => {
+        this.counter += 1;
+      });
+      await promise;
+    } catch (e) {
+      throw new Error('should not reach this line');
+    }
+    expect(this.counter, 'to equal', 1);
+  });  
 });
